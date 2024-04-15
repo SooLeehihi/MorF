@@ -13,10 +13,6 @@ class WebcamWidget(QWidget):
         # Load the model
         self.model = load_model(r"C:/Users/WSU/Desktop/new/converted_keras/keras_Model.h5", compile=False)
 
-        # Load the labels
-        with open(r"C:/Users/WSU/Desktop/new/converted_keras/labels.txt", "r") as f:
-            self.class_names = f.readlines()
-
         # Set up the layout
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -52,7 +48,7 @@ class WebcamWidget(QWidget):
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Resize the frame
-        frame_resized = cv2.resize(frame_rgb, (224, 224))
+        frame_resized = cv2.resize(frame_rgb, (800, 600))
 
         # Convert the frame to QImage
         h, w, ch = frame_resized.shape
@@ -63,17 +59,19 @@ class WebcamWidget(QWidget):
         self.image_label.setPixmap(QPixmap.fromImage(qt_image))
 
         # Preprocess the frame for prediction
-        frame_preprocessed = (frame_resized / 127.5) - 1
+        frame_preprocessed = cv2.resize(frame_resized, (224, 224))
+        frame_preprocessed = (frame_preprocessed / 127.5) - 1
         frame_preprocessed = np.expand_dims(frame_preprocessed, axis=0)
 
         # Make prediction
         prediction = self.model.predict(frame_preprocessed)
+        class_names = ["여성", "남성"]
         index = np.argmax(prediction)
-        class_name = self.class_names[index]
+        class_name = class_names[index]
         confidence_score = prediction[0][index]
 
         # Update prediction label
-        prediction_text = f"Class: {class_name[2:]}, Confidence Score: {str(np.round(confidence_score * 100))[:-2]}%"
+        prediction_text = f"Class: {class_name}, Confidence Score: {str(np.round(confidence_score * 100))[:-2]}%"
         self.prediction_label.setText(prediction_text)
 
     def close_application(self):
